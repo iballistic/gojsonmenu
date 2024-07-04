@@ -21,7 +21,7 @@ func TestParse(t *testing.T) {
 
 	config_data := menu.ViewGroupBySection("foodmenu")
 	if len(config_data) != 3 {
-		t.Errorf("%s", "found more than 3 sections")
+		t.Errorf("%s", "found more or less than 3 sections")
 	}
 	for section, views := range config_data {
 		t.Logf("Section: %s", section.Header)

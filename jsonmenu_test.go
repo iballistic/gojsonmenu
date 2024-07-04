@@ -1,4 +1,4 @@
-package jsonmenu
+package gojsonmenu
 
 import (
 	"encoding/json"

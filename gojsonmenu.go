@@ -36,17 +36,19 @@ type Converter struct {
 }
 
 type TableCell struct {
-	Maxchar     int         `json:"maxchar"`
-	Format      string      `json:"format"`
-	Key         string      `json:"key"`
-	Title       string      `json:"title"`
-	Celltype    string      `json:"celltype"`
-	Placeholder string      `json:"placeholder"`
-	Values      []CellValue `json:"values"`
-	Converters  []Converter `json:"converter"`
-	Minval      string      `json:"minval"`
-	Maxval      string      `json:"maxval"`
-	Rowheight   int         `json:"rowheight"`
+	Maxchar       int         `json:"maxchar"`
+	Format        string      `json:"format"`
+	Pattern       string      `json:"pattern"`
+	Incrementstep string      `json:"incrementstep"`
+	Key           string      `json:"key"`
+	Title         string      `json:"title"`
+	Celltype      string      `json:"celltype"`
+	Placeholder   string      `json:"placeholder"`
+	Values        []CellValue `json:"values"`
+	Converters    []Converter `json:"converter"`
+	Minval        string      `json:"minval"`
+	Maxval        string      `json:"maxval"`
+	Rowheight     int         `json:"rowheight"`
 }
 
 type RelationalMapping struct {

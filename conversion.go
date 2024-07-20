@@ -111,7 +111,7 @@ func (ulc UnitLengthConverter) Convert(value float64, fromUnit string, toUnit st
 		"kilometers":        1000.0,
 		"hectometers":       100.0,
 		"decameters":        10.0,
-		"meters":            1.0, // base
+		"meters":            1.0, // base unit
 		"decimeters":        0.1,
 		"centimeters":       0.01,
 		"millimeters":       0.001,
@@ -148,12 +148,16 @@ type UnitPressureConverter struct{}
 
 func (upc UnitPressureConverter) Convert(value float64, fromUnit string, toUnit string) (float64, error) {
 	conversionFactors := map[string]float64{
-		"newtonsPerMetersSquared":  1,         // base unit (Pascal)
-		"megapascals":              1000000.0, // megapascal to Pascal
-		"kilopascals":              1000,      // kilopascal to Pascal
-		"hectopascals":             100.0,     // megapascal to Pascal
-		"bars":                     100000,    // bar to Pascal
-		"poundsForcePerSquareInch": 6894.76,   // pounds per square inch to Pascal
+		"newtonsPerMetersSquared":  1, // base unit (Pascal)
+		"gigapascals":              1.00e+09,
+		"megapascals":              1000000,
+		"kilopascals":              1000,
+		"hectopascals":             100,
+		"inchesOfMercury":          3.39e+03,
+		"bars":                     1.00e+05,
+		"millibars":                1.00e+02,
+		"millimetersOfMercury":     133.322,
+		"poundsForcePerSquareInch": 6894.76,
 	}
 
 	baseValue, ok := conversionFactors[fromUnit]

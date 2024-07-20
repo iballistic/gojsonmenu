@@ -27,7 +27,7 @@ func TestParse(t *testing.T) {
 		t.Logf("Section: %s", section.Header)
 		for _, view := range views {
 
-			t.Logf("Cell Key: %s", view.Cell.Key)
+			t.Logf("Cell Key: %s %s", view.Cell.Key, view.Cell.DefaultValue())
 
 		}
 

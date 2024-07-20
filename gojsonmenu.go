@@ -5,6 +5,26 @@ import (
 	"sort"
 )
 
+type ValueType string
+
+type ConversionType string
+
+const (
+	// default value or optional values to provide a drop down or select menu
+	DefaultValue  ValueType = "default"
+	OptionalValue ValueType = "optional"
+)
+
+const (
+	// DefaultUnit represents the default unit is used to store int or double values,
+	//if a user does not select one of the optional supported conversions, the default value
+	//should be stored as is, otherwise we must convert from optional unit back to a default unit
+	//to ensure the data integrity. Otherwise, if we ever loose user settings we will not know
+	//what unit was selected at that time.
+	DefaultUnit  ConversionType = "default"
+	OptionalUnit ConversionType = "optional"
+)
+
 type JSonMenu struct {
 	Storyboard []Storyboard        `json:"storyboard"`
 	Section    []TableSection      `json:"section"`
@@ -25,14 +45,14 @@ type TableSection struct {
 }
 
 type CellValue struct {
-	Value string `json:"value"`
-	Type  string `json:"type"`
+	Value string    `json:"value"`
+	Type  ValueType `json:"type"`
 }
 
 type Converter struct {
-	Name   string `json:"name"`
-	Type   string `json:"type"`
-	Symbol string `json:"symbol"`
+	Name   string         `json:"name"`
+	Type   ConversionType `json:"type"`
+	Symbol string         `json:"symbol"`
 }
 
 type TableCell struct {
@@ -49,6 +69,28 @@ type TableCell struct {
 	Minval        string      `json:"minval"`
 	Maxval        string      `json:"maxval"`
 	Rowheight     int         `json:"rowheight"`
+}
+
+func (c *TableCell) DefaultValue() string {
+
+	for _, item := range c.Values {
+		if item.Type == DefaultValue {
+			return item.Value
+		}
+	}
+
+	return ""
+}
+
+func (c *TableCell) DefaultUnit() string {
+
+	for _, item := range c.Converters {
+		if item.Type == DefaultUnit {
+			return item.Name
+		}
+	}
+
+	return ""
 }
 
 type RelationalMapping struct {
@@ -119,7 +161,7 @@ func (j *JSonMenu) ViewByStoryboard(name string) []RelationalView {
 	}
 
 	sort.Slice(data, func(i, j int) bool {
-		return data[i].Order > data[j].Order
+		return data[i].Order < data[j].Order
 	})
 
 	return data
@@ -132,10 +174,14 @@ func (j *JSonMenu) ViewGroupBySection(storyboard string) map[TableSection][]Rela
 		data[view.Section] = append(data[view.Section], view)
 	}
 
-	// sort.Slice(data, func(i, j int) bool {
-	// 	return data[i].Order > data[j].Order
-	// })
+	for key, val := range data {
 
+		sort.Slice(val, func(i, j int) bool {
+			return val[i].Order < val[j].Order
+		})
+		data[key] = val
+
+	}
 	return data
 }
 

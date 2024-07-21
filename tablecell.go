@@ -1,5 +1,10 @@
 package gojsonmenu
 
+import (
+	"fmt"
+	"strconv"
+)
+
 type TableCellType string
 
 const (
@@ -12,40 +17,6 @@ const (
 	CellPhotoType       TableCellType = "CellPhoto"
 )
 
-type ValueSelectionType string
-
-const (
-	// default value or optional values to provide a drop down or select menu
-	// we want to display default value by default during new record creation
-	// not all cells should have a value, but it is a good idea to have some values
-	//for example windspeed could be 0 default
-	DefaultValue  ValueSelectionType = "default"
-	OptionalValue ValueSelectionType = "optional"
-)
-
-type ConversionSelectionType string
-
-const (
-	// DefaultUnit represents the default unit is used to store int or double/float values,
-	//if a user does not select one of the optional supported conversions, the default value
-	//should be stored as is, otherwise we must convert from optional
-	// (normally we be a user setting stored somewhere else) unit back to a default unit
-	//to ensure the data integrity. Otherwise, we must information in pairs, user selected unit plus value
-	DefaultUnit  ConversionSelectionType = "default"
-	OptionalUnit ConversionSelectionType = "optional"
-)
-
-type CellValue struct {
-	Value string             `json:"value"`
-	Type  ValueSelectionType `json:"type"`
-}
-
-type Converter struct {
-	Name   string                  `json:"name"`
-	Type   ConversionSelectionType `json:"type"`
-	Symbol string                  `json:"symbol"`
-}
-
 type TableCell struct {
 	Maxchar       int           `json:"maxchar"`
 	Format        string        `json:"format"`
@@ -56,16 +27,33 @@ type TableCell struct {
 	Celltype      TableCellType `json:"celltype"`
 	Placeholder   string        `json:"placeholder"`
 	Values        []CellValue   `json:"values"`
-	Converters    []Converter   `json:"converter"`
+	Units         []ValueUnit   `json:"units"`
 	Minval        string        `json:"minval"`
 	Maxval        string        `json:"maxval"`
 	Rowheight     int           `json:"rowheight"`
 }
 
+// / Returns: text value to be used in text field title etc.
+func (c *TableCell) TitleUI(unit *ValueUnit) string {
+	if len(c.Title) == 0 {
+		return ""
+	}
+
+	if unit != nil {
+
+		return fmt.Sprintf("%s (%s)", c.Title, unit.Symbol)
+	} else if c.DefaultUnit() != nil {
+		return fmt.Sprintf("%s (%s)", c.Title, c.DefaultUnit().Symbol)
+
+	} else {
+		return c.Title
+	}
+}
+
 func (c *TableCell) DefaultValue() string {
 
 	for _, item := range c.Values {
-		if item.Type == DefaultValue {
+		if item.Requirement == DefaultValue {
 			return item.Value
 		}
 	}
@@ -73,13 +61,105 @@ func (c *TableCell) DefaultValue() string {
 	return ""
 }
 
-func (c *TableCell) DefaultUnit() string {
+func (c *TableCell) DefaultUnit() *ValueUnit {
 
-	for _, item := range c.Converters {
-		if item.Type == DefaultUnit {
-			return item.Name
+	for _, item := range c.Units {
+		if item.Option == DefaultUnit {
+			return &item
 		}
 	}
 
-	return ""
+	return nil
+}
+
+// Converts the default value per user setting
+func (c *TableCell) DefaultValueConverted(to string) (string, error) {
+
+	value := c.DefaultValue()
+	defaultUnit := c.DefaultUnit()
+
+	valueProper, err := strconv.ParseFloat(value, 64)
+
+	if err != nil {
+		return value, err
+	}
+
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	if err != nil {
+		return value, err
+	}
+
+	return fmt.Sprintf(c.Format, convertedValue), nil
+}
+
+// Converts the minimum value per user setting
+func (c *TableCell) MinvalConverted(to string) (string, error) {
+
+	value := c.Minval
+	defaultUnit := c.DefaultUnit()
+
+	valueProper, err := strconv.ParseFloat(value, 64)
+
+	if err != nil {
+		return value, err
+	}
+
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	if err != nil {
+		return value, err
+	}
+
+	return fmt.Sprintf(c.Format, convertedValue), nil
+
+}
+
+// Converts the maximum value per user setting
+func (c *TableCell) MaxvalConverted(to string) (string, error) {
+	value := c.Maxval
+	defaultUnit := c.DefaultUnit()
+
+	valueProper, err := strconv.ParseFloat(value, 64)
+
+	if err != nil {
+		return value, err
+	}
+
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	if err != nil {
+		return value, err
+	}
+
+	return fmt.Sprintf(c.Format, convertedValue), nil
+}
+
+// Converts all available values per user settings, in this case it would be toUnit
+// mostly used for test cases
+func (c *TableCell) ConvertedValues(fromUnit string, toUnit string) []CellValue {
+	var convertedValues = make([]CellValue, 0)
+
+	for _, item := range c.Values {
+
+		newCellValue := CellValue{
+			Requirement: item.Requirement,
+			Value:       item.Value,
+		}
+
+		valueProper, err := strconv.ParseFloat(item.Value, 64)
+
+		if err != nil {
+			valueProper = 0.0
+		}
+
+		convertedValue, err := ConvertValue(valueProper, fromUnit, toUnit)
+		if err != nil {
+			newCellValue.Value = fmt.Sprintf(c.Format, 0)
+		} else {
+			newCellValue.Value = fmt.Sprintf(c.Format, convertedValue)
+		}
+
+		convertedValues = append(convertedValues, newCellValue)
+
+	}
+
+	return convertedValues
 }

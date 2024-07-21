@@ -4,6 +4,85 @@ import (
 	"errors"
 )
 
+var provider = map[string]IConverter{
+	// Mass
+	"kilograms":  UnitMassConverter{},
+	"grams":      UnitMassConverter{},
+	"decigrams":  UnitMassConverter{},
+	"milligrams": UnitMassConverter{},
+	"micrograms": UnitMassConverter{},
+	"nanograms":  UnitMassConverter{},
+	"picograms":  UnitMassConverter{},
+	"ounces":     UnitMassConverter{},
+	"pounds":     UnitMassConverter{},
+	"stones":     UnitMassConverter{},
+	"metricTons": UnitMassConverter{},
+	"shortTons":  UnitMassConverter{},
+	"carats":     UnitMassConverter{},
+	"ouncesTroy": UnitMassConverter{},
+	"slugs":      UnitMassConverter{},
+	"grain":      UnitMassConverter{},
+	"grains":     UnitMassConverter{},
+
+	// Speed
+	"metersPerSecond":   UnitSpeedConverter{},
+	"footPerSecond":     UnitSpeedConverter{},
+	"kilometersPerHour": UnitSpeedConverter{},
+	"milesPerHour":      UnitSpeedConverter{},
+	"knots":             UnitSpeedConverter{},
+
+	// Temperature
+	"kelvin":     UnitTemperatureConverter{},
+	"celsius":    UnitTemperatureConverter{},
+	"fahrenheit": UnitTemperatureConverter{},
+
+	// Length
+	"megameters":  UnitLengthConverter{},
+	"kilometers":  UnitLengthConverter{},
+	"meters":      UnitLengthConverter{},
+	"centimeters": UnitLengthConverter{},
+	"millimeters": UnitLengthConverter{},
+	"micrometers": UnitLengthConverter{},
+	"nanometers":  UnitLengthConverter{},
+	"picometers":  UnitLengthConverter{},
+	"inches":      UnitLengthConverter{},
+	"feet":        UnitLengthConverter{},
+	"yards":       UnitLengthConverter{},
+	"miles":       UnitLengthConverter{},
+
+	// Pressure
+	"inchesOfMercury":          UnitPressureConverter{},
+	"bars":                     UnitPressureConverter{},
+	"millibars":                UnitPressureConverter{},
+	"millimetersOfMercury":     UnitPressureConverter{},
+	"poundsForcePerSquareInch": UnitPressureConverter{},
+	"kilopascals":              UnitPressureConverter{},
+	"hectopascals":             UnitPressureConverter{},
+}
+
+// /ConvertValue converts values from onr unit to another
+func ConvertValue(value float64, fromUnit string, toUnit string) (float64, error) {
+
+	fromUnitProper, ok := provider[fromUnit]
+
+	if !ok {
+		return 0, errors.New("invalid from unit")
+	}
+
+	toUnitProper, ok := provider[toUnit]
+
+	if !ok {
+		return 0, errors.New("invalid to unit")
+	}
+
+	//make sure we are converting within the same scope, we do not want to convert kilograms to meters...
+	if toUnitProper != fromUnitProper {
+		return 0, errors.New("from and to units are not comptabile")
+	}
+
+	return fromUnitProper.Convert(value, fromUnit, toUnit)
+}
+
 type IConverter interface {
 	Convert(value float64, fromUnit string, toUnit string) (float64, error)
 }
@@ -147,7 +226,7 @@ func (ulc UnitLengthConverter) Convert(value float64, fromUnit string, toUnit st
 type UnitPressureConverter struct{}
 
 func (upc UnitPressureConverter) Convert(value float64, fromUnit string, toUnit string) (float64, error) {
-	conversionFactors := map[string]float64{
+	coefficient := map[string]float64{
 		"newtonsPerMetersSquared":  1, // base unit (Pascal)
 		"gigapascals":              1.00e+09,
 		"megapascals":              1000000,
@@ -160,12 +239,12 @@ func (upc UnitPressureConverter) Convert(value float64, fromUnit string, toUnit 
 		"poundsForcePerSquareInch": 6894.76,
 	}
 
-	baseValue, ok := conversionFactors[fromUnit]
+	baseValue, ok := coefficient[fromUnit]
 	if !ok {
 		return 0, errors.New("unknown from unit")
 	}
 
-	targetValue, ok := conversionFactors[toUnit]
+	targetValue, ok := coefficient[toUnit]
 	if !ok {
 		return 0, errors.New("unknown to unit")
 	}

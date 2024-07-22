@@ -33,20 +33,53 @@ type TableCell struct {
 	Rowheight     int           `json:"rowheight"`
 }
 
-// / Returns: text value to be used in text field title etc.
-func (c *TableCell) TitleUI(unit *ValueUnit) string {
+// / Returns: new title using current title and valut unit
+func (c *TableCell) TitleComputed(unit *ValueUnit) string {
 	if len(c.Title) == 0 {
 		return ""
 	}
 
 	if unit != nil {
-
 		return fmt.Sprintf("%s (%s)", c.Title, unit.Symbol)
 	} else if c.DefaultUnit() != nil {
 		return fmt.Sprintf("%s (%s)", c.Title, c.DefaultUnit().Symbol)
 
 	} else {
 		return c.Title
+	}
+}
+
+// Computes new placeholder text using min and max values if applicable for provided unit
+func (c *TableCell) PlaceholderComputed(unit *ValueUnit) string {
+
+	if len(c.Placeholder) == 0 {
+		return ""
+	} else if unit == nil {
+		return c.Placeholder
+	} else if c.Celltype != CellIntType && c.Celltype != CellDoubleType {
+		return c.Placeholder
+	} else if len(c.Minval) == 0 || len(c.Maxval) == 0 {
+		return c.Placeholder
+	} else if c.Celltype == CellIntType {
+		return fmt.Sprintf("%s (%s)", c.Placeholder, unit.Symbol)
+	} else if c.Celltype == CellDoubleType {
+
+		minVal, err := c.MinvalConverted(unit.Name)
+
+		if err != nil {
+			return c.Placeholder
+		}
+
+		maxVal, err := c.MaxvalConverted(unit.Name)
+
+		if err != nil {
+			return c.Placeholder
+		}
+
+		return fmt.Sprintf("%s (From %s To %s)", c.Placeholder, minVal, maxVal)
+
+	} else {
+		return c.Placeholder
 	}
 }
 

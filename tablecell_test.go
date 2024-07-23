@@ -39,10 +39,12 @@ func TestTableCellValueUnit(t *testing.T) {
 
 }
 
-func TestTableCellTitleComputed(t *testing.T) {
+func TestTableCellLabelComputed(t *testing.T) {
 	tableCell := TableCell{
 		Key:      "goldweight",
 		Title:    "Gold Weight",
+		Minval:   "0",
+		Maxval:   "1000",
 		Format:   "%.3f",
 		Celltype: CellDoubleType,
 	}
@@ -63,7 +65,40 @@ func TestTableCellTitleComputed(t *testing.T) {
 
 	tableCell.Units = valueUnits
 
-	newTitle := "Gold Weight (g)"
+	newLabel := "Gold Weight (g)"
+	labelComputed := tableCell.LabelComputed(&tableCell.Units[1])
+	if newLabel != labelComputed {
+		t.Errorf("was expecting \"%s\" got %s", newLabel, labelComputed)
+	}
+}
+
+func TestTableCellTitleComputed(t *testing.T) {
+	tableCell := TableCell{
+		Key:      "goldweight",
+		Title:    "Gold Weight",
+		Minval:   "0",
+		Maxval:   "1000",
+		Format:   "%.3f",
+		Celltype: CellDoubleType,
+	}
+
+	values := make([]CellValue, 0)
+	values = append(values, CellValue{Value: "10", Requirement: DefaultValue})
+	values = append(values, CellValue{Value: "15", Requirement: OptionalValue})
+	values = append(values, CellValue{Value: "16", Requirement: OptionalValue})
+	//lets add another default value to see if we can confuse the system.
+	values = append(values, CellValue{Value: "17", Requirement: DefaultValue})
+	//set values
+	tableCell.Values = values
+
+	valueUnits := make([]ValueUnit, 0)
+	valueUnits = append(valueUnits, ValueUnit{Name: "carats", Option: DefaultUnit, Symbol: "ct"})
+	valueUnits = append(valueUnits, ValueUnit{Name: "grams", Option: OptionalUnit, Symbol: "g"})
+	valueUnits = append(valueUnits, ValueUnit{Name: "milligrams", Option: OptionalUnit, Symbol: "mg"})
+
+	tableCell.Units = valueUnits
+
+	newTitle := "Gold Weight (From 0.000 To 200.000)"
 	titleComputed := tableCell.TitleComputed(&tableCell.Units[1])
 	if newTitle != titleComputed {
 		t.Errorf("was expecting \"%s\" got %s", newTitle, titleComputed)
@@ -93,7 +128,7 @@ func TestTableCellPlaceHolderComputed(t *testing.T) {
 
 	tableCell.Units = valueUnits
 
-	newPlaceholder := "Wind Speed (From 0.00 To 102.67)"
+	newPlaceholder := "From 0.00 To 102.67"
 	placeholderComputed := tableCell.PlaceholderComputed(&tableCell.Units[2])
 	if placeholderComputed != newPlaceholder {
 		t.Errorf("was expecting \"%s\" got %s", newPlaceholder, placeholderComputed)

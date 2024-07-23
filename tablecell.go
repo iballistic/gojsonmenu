@@ -33,8 +33,8 @@ type TableCell struct {
 	Rowheight     int           `json:"rowheight"`
 }
 
-// / Returns: new title using current title and valut unit
-func (c *TableCell) TitleComputed(unit *ValueUnit) string {
+// / Returns: new label text using current title and valut unit
+func (c *TableCell) LabelComputed(unit *ValueUnit) string {
 	if len(c.Title) == 0 {
 		return ""
 	}
@@ -49,6 +49,41 @@ func (c *TableCell) TitleComputed(unit *ValueUnit) string {
 	}
 }
 
+// / Returns: new title using current title and valut unit
+func (c *TableCell) TitleComputed(unit *ValueUnit) string {
+
+	if len(c.Title) == 0 {
+		return ""
+	} else if unit == nil {
+		return c.Title
+	} else if c.Celltype != CellIntType && c.Celltype != CellDoubleType {
+		return c.Title
+	} else if len(c.Minval) == 0 || len(c.Maxval) == 0 {
+		return c.Title
+	} else if c.Celltype == CellIntType {
+		return fmt.Sprintf("%s (From %s To %s)", c.Title, c.Minval, c.Maxval)
+	} else if c.Celltype == CellDoubleType {
+
+		minVal, err := c.MinvalConverted(unit.Name)
+
+		if err != nil {
+			return c.Title
+		}
+
+		maxVal, err := c.MaxvalConverted(unit.Name)
+
+		if err != nil {
+			return c.Title
+		}
+
+		return fmt.Sprintf("%s (From %s To %s)", c.Title, minVal, maxVal)
+
+	} else {
+		return c.Title
+	}
+
+}
+
 // Computes new placeholder text using min and max values if applicable for provided unit
 func (c *TableCell) PlaceholderComputed(unit *ValueUnit) string {
 
@@ -61,7 +96,7 @@ func (c *TableCell) PlaceholderComputed(unit *ValueUnit) string {
 	} else if len(c.Minval) == 0 || len(c.Maxval) == 0 {
 		return c.Placeholder
 	} else if c.Celltype == CellIntType {
-		return fmt.Sprintf("%s (%s)", c.Placeholder, unit.Symbol)
+		return fmt.Sprintf("From %s To %s", c.Minval, c.Maxval)
 	} else if c.Celltype == CellDoubleType {
 
 		minVal, err := c.MinvalConverted(unit.Name)
@@ -76,7 +111,7 @@ func (c *TableCell) PlaceholderComputed(unit *ValueUnit) string {
 			return c.Placeholder
 		}
 
-		return fmt.Sprintf("%s (From %s To %s)", c.Placeholder, minVal, maxVal)
+		return fmt.Sprintf("From %s To %s", minVal, maxVal)
 
 	} else {
 		return c.Placeholder

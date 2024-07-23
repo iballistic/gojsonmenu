@@ -12,6 +12,7 @@ type JSonMenu struct {
 	Mapping    []RelationalMapping `json:"mapping"`
 }
 
+// Builds relational view based on the mapping confugration is the json file
 func (j *JSonMenu) View() []RelationalView {
 
 	storyboardCollection := make(map[string]Storyboard)
@@ -53,9 +54,8 @@ func (j *JSonMenu) View() []RelationalView {
 
 }
 
-//Get relational view based on the mapping confugration is the json file
-//Parameter forStoryboard: Name of the story board that view will be filtered on
-//Returns: An optional array of RelationalView
+// Parameter forStoryboard: Name of the story board that view will be filtered on
+// Returns: An optional array of RelationalView for a story board(page)
 func (j *JSonMenu) ViewByStoryboard(name string) []RelationalView {
 
 	var data []RelationalView
@@ -73,7 +73,7 @@ func (j *JSonMenu) ViewByStoryboard(name string) []RelationalView {
 	return data
 }
 
-// Get relational view based on the mapping confugration is the json file
+// Returns relational view for a story board (page)
 // Parameter forStoryboard: Name of the story board that view will be filtered on
 // Returns: An dictionary(map) of RelationalView, the dictionary(map) keys are TableSection object
 // TableSection key is mostly for groups, a page(storyborard) may have multiple sections and each section may have
@@ -86,7 +86,7 @@ func (j *JSonMenu) ViewGroupBySection(storyboard string) map[TableSection][]Rela
 	}
 
 	for key, val := range data {
-
+		//sort items within val
 		sort.Slice(val, func(i, j int) bool {
 			return val[i].Order < val[j].Order
 		})
@@ -96,9 +96,9 @@ func (j *JSonMenu) ViewGroupBySection(storyboard string) map[TableSection][]Rela
 	return data
 }
 
-//Returns a single cell config by key
-//Parameter byKey: byKey is the key name of a cell
-//Returns: first elment in the array of cell config ( usualy there should be only one cell with the same key)
+// Returns a single cell config by key
+// Parameter byKey: byKey is the key name of a cell
+// Returns: first elment in the array of cell config ( usualy there should be only one cell with the same key)
 func (j *JSonMenu) GetCell(byKey string) (TableCell, error) {
 
 	for _, cell := range j.Cells {

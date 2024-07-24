@@ -64,13 +64,13 @@ func (c *TableCell) TitleComputed(unit *ValueUnit) string {
 		return fmt.Sprintf("%s (From %s To %s)", c.Title, c.Minval, c.Maxval)
 	} else if c.Celltype == CellDoubleType {
 
-		minVal, err := c.MinvalConverted(unit.Name)
+		minVal, err := c.MinvalConverted(unit)
 
 		if err != nil {
 			return c.Title
 		}
 
-		maxVal, err := c.MaxvalConverted(unit.Name)
+		maxVal, err := c.MaxvalConverted(unit)
 
 		if err != nil {
 			return c.Title
@@ -99,13 +99,13 @@ func (c *TableCell) PlaceholderComputed(unit *ValueUnit) string {
 		return fmt.Sprintf("From %s To %s", c.Minval, c.Maxval)
 	} else if c.Celltype == CellDoubleType {
 
-		minVal, err := c.MinvalConverted(unit.Name)
+		minVal, err := c.MinvalConverted(unit)
 
 		if err != nil {
 			return c.Placeholder
 		}
 
-		maxVal, err := c.MaxvalConverted(unit.Name)
+		maxVal, err := c.MaxvalConverted(unit)
 
 		if err != nil {
 			return c.Placeholder
@@ -141,7 +141,11 @@ func (c *TableCell) DefaultUnit() *ValueUnit {
 }
 
 // Converts the default value per user setting
-func (c *TableCell) DefaultValueConverted(to string) (string, error) {
+func (c *TableCell) DefaultValueConverted(to *ValueUnit) (string, error) {
+
+	if to == nil {
+		return c.DefaultValue(), nil
+	}
 
 	value := c.DefaultValue()
 	defaultUnit := c.DefaultUnit()
@@ -152,7 +156,7 @@ func (c *TableCell) DefaultValueConverted(to string) (string, error) {
 		return value, err
 	}
 
-	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to.Name)
 	if err != nil {
 		return value, err
 	}
@@ -161,8 +165,11 @@ func (c *TableCell) DefaultValueConverted(to string) (string, error) {
 }
 
 // Converts the minimum value per user setting
-func (c *TableCell) MinvalConverted(to string) (string, error) {
+func (c *TableCell) MinvalConverted(to *ValueUnit) (string, error) {
 
+	if to == nil {
+		return c.Minval, nil
+	}
 	value := c.Minval
 	defaultUnit := c.DefaultUnit()
 
@@ -172,7 +179,7 @@ func (c *TableCell) MinvalConverted(to string) (string, error) {
 		return value, err
 	}
 
-	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to.Name)
 	if err != nil {
 		return value, err
 	}
@@ -182,7 +189,11 @@ func (c *TableCell) MinvalConverted(to string) (string, error) {
 }
 
 // Converts the maximum value per user setting
-func (c *TableCell) MaxvalConverted(to string) (string, error) {
+func (c *TableCell) MaxvalConverted(to *ValueUnit) (string, error) {
+
+	if to == nil {
+		return c.Maxval, nil
+	}
 	value := c.Maxval
 	defaultUnit := c.DefaultUnit()
 
@@ -192,7 +203,7 @@ func (c *TableCell) MaxvalConverted(to string) (string, error) {
 		return value, err
 	}
 
-	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to)
+	convertedValue, err := ConvertValue(valueProper, defaultUnit.Name, to.Name)
 	if err != nil {
 		return value, err
 	}
@@ -202,8 +213,13 @@ func (c *TableCell) MaxvalConverted(to string) (string, error) {
 
 // Converts all available values per user settings, in this case it would be toUnit
 // mostly used for test cases
-func (c *TableCell) ConvertedValues(fromUnit string, toUnit string) []CellValue {
+func (c *TableCell) ConvertedValues(fromUnit *ValueUnit, toUnit *ValueUnit) []CellValue {
 	var convertedValues = make([]CellValue, 0)
+
+	if fromUnit == nil || toUnit == nil {
+
+		return c.Values
+	}
 
 	for _, item := range c.Values {
 
@@ -218,7 +234,7 @@ func (c *TableCell) ConvertedValues(fromUnit string, toUnit string) []CellValue 
 			valueProper = 0.0
 		}
 
-		convertedValue, err := ConvertValue(valueProper, fromUnit, toUnit)
+		convertedValue, err := ConvertValue(valueProper, fromUnit.Name, toUnit.Name)
 		if err != nil {
 			newCellValue.Value = fmt.Sprintf(c.Format, 0)
 		} else {

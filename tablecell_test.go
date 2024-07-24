@@ -31,7 +31,10 @@ func TestTableCellValueUnit(t *testing.T) {
 		t.Logf("Original value %s", item.Value)
 	}
 
-	convertedValues := tableCell.ConvertedValues("grain", "grams")
+	convertedValues := tableCell.ConvertedValues(
+		&ValueUnit{Name: "grain", Option: DefaultUnit, Symbol: "gr"},
+		&ValueUnit{Name: "grams", Option: OptionalUnit, Symbol: "g"},
+	)
 
 	for _, item := range convertedValues {
 		t.Logf("Converted value %s", item.Value)

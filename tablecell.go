@@ -2,6 +2,7 @@ package gojsonmenu
 
 import (
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
@@ -150,6 +151,10 @@ func (c *TableCell) DefaultValueConverted(to *ValueUnit) (string, error) {
 	value := c.DefaultValue()
 	defaultUnit := c.DefaultUnit()
 
+	if reflect.DeepEqual(to, defaultUnit) {
+		return value, nil
+	}
+
 	valueProper, err := strconv.ParseFloat(value, 64)
 
 	if err != nil {
@@ -172,6 +177,10 @@ func (c *TableCell) MinvalConverted(to *ValueUnit) (string, error) {
 	}
 	value := c.Minval
 	defaultUnit := c.DefaultUnit()
+
+	if reflect.DeepEqual(to, defaultUnit) {
+		return value, nil
+	}
 
 	valueProper, err := strconv.ParseFloat(value, 64)
 
@@ -197,6 +206,10 @@ func (c *TableCell) MaxvalConverted(to *ValueUnit) (string, error) {
 	value := c.Maxval
 	defaultUnit := c.DefaultUnit()
 
+	if reflect.DeepEqual(to, defaultUnit) {
+		return value, nil
+	}
+
 	valueProper, err := strconv.ParseFloat(value, 64)
 
 	if err != nil {
@@ -218,6 +231,10 @@ func (c *TableCell) ConvertedValues(fromUnit *ValueUnit, toUnit *ValueUnit) []Ce
 
 	if fromUnit == nil || toUnit == nil {
 
+		return c.Values
+	}
+
+	if reflect.DeepEqual(fromUnit, toUnit) {
 		return c.Values
 	}
 
